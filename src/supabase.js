@@ -1,13 +1,27 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Переменные окружения (создайте файл .env в корне проекта)
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://YOUR_PROJECT_ID.supabase.co';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'YOUR_ANON_KEY';
+// Ваши данные из Supabase
+const SUPABASE_URL = 'https://pjwdlwbujcdhkxrptxpn.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_LFO2HQSFTntahx7YGj5BSg_Cxs9wcvV';
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Проверка подключения
-if (SUPABASE_URL.includes('YOUR_PROJECT_ID')) {
-  console.warn('⚠️ Supabase не настроен! Создайте файл .env с вашими данными.');
-  console.warn('Скопируйте .env.example в .env и заполните переменные.');
-}
+export const checkConnection = async () => {
+  try {
+    const { data, error } = await supabase.from('unions').select('count').limit(1);
+    if (error) {
+      if (error.code === '42P01') {
+        console.warn('⚠️ Таблицы ещё не созданы! Выполните SQL скрипт в Supabase SQL Editor.');
+        return false;
+      }
+      console.error('❌ Ошибка подключения:', error.message);
+      return false;
+    }
+    console.log('✅ Supabase подключён!');
+    return true;
+  } catch (error) {
+    console.error('❌ Ошибка:', error.message);
+    return false;
+  }
+};
