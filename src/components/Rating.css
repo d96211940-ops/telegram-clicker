@@ -159,6 +159,54 @@
   font-size: 13px;
 }
 
+.update-soon {
+  color: #e74c3c;
+  font-size: 12px;
+  margin-top: 5px;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Loading state */
+.rating-loading {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.loading-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.rating-loading p {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Username style */
+.rating-username {
+  color: #667eea;
+  font-size: 12px;
+  margin-left: 8px;
+  font-weight: normal;
+}
+
+.rating-level {
+  font-size: 12px;
+  color: #f1c40f;
+  margin-top: 3px;
+}
+
 /* Empty state */
 .rating-empty {
   text-align: center;

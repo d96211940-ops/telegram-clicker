@@ -1,19 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../supabase';
 import './Rating.css';
 
-const Rating = () => {
+const Rating = ({ telegramUser }) => {
   const [activeTab, setActiveTab] = useState('unions');
+  const [unionsRating, setUnionsRating] = useState([]);
+  const [playersRating, setPlayersRating] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [timeUntilUpdate, setTimeUntilUpdate] = useState(60);
 
-  // Рейтинги будут загружаться с бэкенда
-  const unionsRating = [];
-  const playersRating = [];
+  // Загрузка рейтинга
+  const loadRating = async () => {
+    setLoading(true);
+    try {
+      // Загружаем союзы
+      const { data: unionsData, error: unionsError } = await supabase
+        .from('unions')
+        .select('*')
+        .order('score', { ascending: false })
+        .limit(100);
 
-  const getRankStyle = (rank) => {
-    if (rank === 1) return 'rank-1';
-    if (rank === 2) return 'rank-2';
-    if (rank === 3) return 'rank-3';
-    return '';
+      if (unionsError) throw unionsError;
+      setUnionsRating(unionsData || []);
+
+      // Загружаем игроков
+      const { data: playersData, error: playersError } = await supabase
+        .from('players')
+        .select('*')
+        .order('score', { ascending: false })
+        .limit(100);
+
+      if (playersError) throw playersError;
+      setPlayersRating(playersData || []);
+    } catch (error) {
+      console.error('Ошибка загрузки рейтинга:', error);
+      // Fallback к пустым массивам
+      setUnionsRating([]);
+      setPlayersRating([]);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    loadRating();
+
+    // Таймер обновления каждые 60 секунд
+    const countdownInterval = setInterval(() => {
+      setTimeUntilUpdate(prev => {
+        if (prev <= 1) {
+          loadRating();
+          return 60;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(countdownInterval);
+  }, []);
 
   const getChangeIcon = (change) => {
     if (change > 0) return <span className="change-up">↑{change}</span>;
@@ -45,7 +89,12 @@ const Rating = () => {
         </button>
       </div>
 
-      {currentData.length === 0 ? (
+      {loading ? (
+        <div className="rating-loading">
+          <div className="loading-icon">🔄</div>
+          <p>Загрузка рейтинга...</p>
+        </div>
+      ) : currentData.length === 0 ? (
         <div className="rating-empty">
           <div className="empty-icon">📊</div>
           <h3>Рейтинг пуст</h3>
@@ -59,24 +108,37 @@ const Rating = () => {
         <div className="rating-list">
           {currentData.map((item, index) => (
             <div
-              key={index}
-              className={`rating-item ${getRankStyle(item.rank)}`}
+              key={activeTab === 'unions' ? item.id : item.id}
+              className={`rating-item ${index < 3 ? `rank-${index + 1}` : ''}`}
             >
               <div className="rating-rank">
-                <span className={`rank-number ${getRankStyle(item.rank)}`}>
-                  {item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : item.rank === 3 ? '🥉' : item.rank}
+                <span className={`rank-number ${index < 3 ? `rank-${index + 1}` : ''}`}>
+                  {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
                 </span>
-                {getChangeIcon(item.change)}
+                {getChangeIcon(0)}
               </div>
 
               <div className="rating-info">
-                <div className="rating-name">{item.name}</div>
-                {item.union && <div className="rating-union">{item.union}</div>}
-                {item.members && <div className="rating-members">👥 {item.members.toLocaleString()}</div>}
+                <div className="rating-name">
+                  {activeTab === 'unions' ? item.name : (
+                    <>
+                      {item.first_name}
+                      {item.username && <span className="rating-username">@{item.username}</span>}
+                    </>
+                  )}
+                </div>
+                {activeTab === 'players' && item.level && (
+                  <div className="rating-level">Уровень {item.level}</div>
+                )}
+                {activeTab === 'unions' && item.members && (
+                  <div className="rating-members">👥 {item.members.toLocaleString()}</div>
+                )}
               </div>
 
               <div className="rating-score">
-                {item.score.toLocaleString()} 💰
+                {activeTab === 'unions' 
+                  ? `${item.score.toLocaleString()} 💰`
+                  : `${item.total_clicks?.toLocaleString() || 0} 👆`}
               </div>
             </div>
           ))}
@@ -84,7 +146,10 @@ const Rating = () => {
       )}
 
       <div className="rating-footer">
-        <p>📊 Обновляется каждые 24 часа</p>
+        <p>📊 Обновляется каждые 60 секунд</p>
+        {timeUntilUpdate <= 10 && (
+          <p className="update-soon">Обновление через {timeUntilUpdate}с...</p>
+        )}
       </div>
     </div>
   );
