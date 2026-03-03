@@ -1,0 +1,192 @@
+.cards {
+  padding: 20px;
+  padding-bottom: 100px;
+}
+
+.cards-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.cards-header h2 {
+  font-size: 28px;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.cards-subtitle {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.active-boosts {
+  background: linear-gradient(135deg, rgba(241, 196, 15, 0.1) 0%, rgba(243, 156, 18, 0.1) 100%);
+  border: 1px solid rgba(241, 196, 15, 0.3);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 25px;
+}
+
+.active-boosts h3 {
+  color: #f1c40f;
+  margin-bottom: 15px;
+  font-size: 16px;
+}
+
+.boosts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.boost-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.boost-icon {
+  font-size: 28px;
+}
+
+.boost-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: #f1c40f;
+}
+
+.boost-label {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.my-cards,
+.shop {
+  margin-bottom: 25px;
+}
+
+.my-cards h3,
+.shop h3 {
+  color: #ffffff;
+  margin-bottom: 15px;
+  font-size: 18px;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.card {
+  border-radius: 15px;
+  padding: 15px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.card.owned {
+  border: 2px solid;
+}
+
+.card.owned.active {
+  animation: cardActive 2s ease infinite;
+}
+
+@keyframes cardActive {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(241, 196, 15, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(241, 196, 15, 0.5);
+  }
+}
+
+.shop-card {
+  border: 1px solid;
+  cursor: default;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.card-icon {
+  font-size: 36px;
+}
+
+.card-rarity {
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.card-name {
+  font-weight: bold;
+  color: #ffffff;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.card-description {
+  font-size: 11px;
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+
+.card-status {
+  font-size: 11px;
+  color: #27ae60;
+  font-weight: 600;
+}
+
+.card.owned:not(.active) .card-status {
+  color: #6b7280;
+}
+
+.buy-btn {
+  width: 100%;
+  padding: 10px;
+  background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+  border: none;
+  border-radius: 8px;
+  color: #1a1a2e;
+  font-weight: bold;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.buy-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(241, 196, 15, 0.4);
+}
+
+.buy-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(50%);
+}
+
+.no-cards {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #6b7280;
+  padding: 30px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+}

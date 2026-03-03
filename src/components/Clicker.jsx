@@ -1,0 +1,182 @@
+import { useState, useEffect, useCallback } from 'react';
+import './Clicker.css';
+
+const Clicker = ({ onScoreUpdate, onStatsUpdate }) => {
+  const [score, setScore] = useState(() => {
+    const saved = localStorage.getItem('clicker_score');
+    return saved ? parseInt(saved, 10) : 0;
+  });
+  
+  const [energy, setEnergy] = useState(() => {
+    const saved = localStorage.getItem('clicker_energy');
+    return saved ? parseInt(saved, 10) : 1000;
+  });
+  
+  const [maxEnergy, setMaxEnergy] = useState(() => {
+    const saved = localStorage.getItem('clicker_max_energy');
+    return saved ? parseInt(saved, 10) : 1000;
+  });
+  
+  const [clickPower, setClickPower] = useState(() => {
+    const saved = localStorage.getItem('clicker_power');
+    return saved ? parseInt(saved, 10) : 1;
+  });
+  
+  const [energyRegen, setEnergyRegen] = useState(() => {
+    const saved = localStorage.getItem('clicker_regen');
+    return saved ? parseInt(saved, 10) : 3;
+  });
+
+  const [clicks, setClicks] = useState([]);
+  const [combo, setCombo] = useState(0);
+  const [lastClickTime, setLastClickTime] = useState(0);
+  const [level, setLevel] = useState(1);
+  const [totalClicks, setTotalClicks] = useState(0);
+  const [totalEarned, setTotalEarned] = useState(0);
+
+  useEffect(() => {
+    localStorage.setItem('clicker_score', score.toString());
+    localStorage.setItem('clicker_energy', energy.toString());
+    localStorage.setItem('clicker_max_energy', maxEnergy.toString());
+    localStorage.setItem('clicker_power', clickPower.toString());
+    localStorage.setItem('clicker_regen', energyRegen.toString());
+    localStorage.setItem('clicker_total_clicks', totalClicks.toString());
+    localStorage.setItem('clicker_total_earned', totalEarned.toString());
+    
+    onScoreUpdate?.(score);
+    onStatsUpdate?.({ totalClicks, totalEarned });
+  }, [score, energy, maxEnergy, clickPower, energyRegen, totalClicks, totalEarned]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setEnergy(prev => Math.min(prev + energyRegen, maxEnergy));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [energyRegen, maxEnergy]);
+
+  useEffect(() => {
+    const newLevel = Math.floor(score / 1000) + 1;
+    setLevel(newLevel);
+  }, [score]);
+
+  useEffect(() => {
+    const comboInterval = setInterval(() => {
+      if (Date.now() - lastClickTime > 2000 && combo > 0) {
+        setCombo(0);
+      }
+    }, 500);
+    return () => clearInterval(comboInterval);
+  }, [lastClickTime, combo]);
+
+  const handleClick = useCallback((e) => {
+    if (energy >= clickPower) {
+      const now = Date.now();
+      const timeDiff = now - lastClickTime;
+      
+      let newCombo = combo;
+      if (timeDiff < 2000) {
+        newCombo = Math.min(combo + 1, 10);
+      } else {
+        newCombo = 1;
+      }
+      setCombo(newCombo);
+      setLastClickTime(now);
+      setTotalClicks(prev => prev + 1);
+      
+      const multiplier = 1 + (newCombo * 0.1);
+      const earned = Math.floor(clickPower * multiplier);
+      
+      setScore(prev => prev + earned);
+      setTotalEarned(prev => prev + earned);
+      setEnergy(prev => prev - clickPower);
+      
+      const rect = e.target.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const id = Date.now();
+      
+      setClicks(prev => [...prev, { id, x, y, value: earned, combo: newCombo }]);
+      
+      setTimeout(() => {
+        setClicks(prev => prev.filter(click => click.id !== id));
+      }, 1000);
+    }
+  }, [energy, clickPower, combo, lastClickTime]);
+
+  const energyPercent = (energy / maxEnergy) * 100;
+  const comboColors = ['#fff', '#4ade80', '#22d3ee', '#3b82f6', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#eab308', '#84cc16', '#f1c40f'];
+
+  return (
+    <div className="clicker-container">
+      <div className="clicker-header">
+        <div className="score-display">
+          <span className="score-icon">💰</span>
+          <span className="score-value">{score.toLocaleString()}</span>
+        </div>
+        <div className="level-display">
+          <span className="level-icon">⭐</span>
+          <span>Ур. {level}</span>
+        </div>
+      </div>
+
+      {combo > 1 && (
+        <div className="combo-display" style={{ color: comboColors[Math.min(combo, 10)] }}>
+          🔥 Комбо x{combo}!
+        </div>
+      )}
+
+      <div className="energy-section">
+        <div className="energy-bar">
+          <div className="energy-fill" style={{ width: `${energyPercent}%` }}>
+            <div className="energy-shine"></div>
+          </div>
+        </div>
+        <div className="energy-text">
+          ⚡ {energy} / {maxEnergy}
+        </div>
+      </div>
+
+      <div className="click-area">
+        <button 
+          className="click-button" 
+          onClick={handleClick}
+          disabled={energy < clickPower}
+        >
+          <div className="button-glow"></div>
+          <div className="coin">🪙</div>
+          <div className="coin-shine"></div>
+          {clicks.map(click => (
+            <span 
+              key={click.id} 
+              className={`click-effect ${click.combo >= 5 ? 'critical' : ''}`}
+              style={{ 
+                left: `${click.x}px`, 
+                top: `${click.y}px`,
+                color: comboColors[Math.min(click.combo, 10)]
+              }}
+            >
+              +{click.value}
+            </span>
+          ))}
+        </button>
+      </div>
+
+      <div className="click-stats">
+        <div className="stat-item">
+          <span className="stat-label">👆 Сила клика</span>
+          <span className="stat-value">{clickPower}</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-label">⚡ Регенерация</span>
+          <span className="stat-value">{energyRegen}/сек</span>
+        </div>
+      </div>
+
+      <div className="info-text">
+        💡 <i>Тапай быстро для комбо-множителя!</i>
+      </div>
+    </div>
+  );
+};
+
+export default Clicker;

@@ -1,0 +1,371 @@
+.union {
+  padding: 20px;
+  padding-bottom: 100px;
+}
+
+.union-header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.union-header h2 {
+  font-size: 28px;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.union-subtitle {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.union-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  border-radius: 15px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.create-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.join-btn {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+}
+
+.action-btn:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(50%);
+}
+
+.btn-icon {
+  font-size: 32px;
+}
+
+.btn-text {
+  text-align: left;
+}
+
+.btn-text div {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.btn-text small {
+  opacity: 0.8;
+  font-size: 12px;
+}
+
+.unions-list h3 {
+  color: #ffffff;
+  margin-bottom: 15px;
+  font-size: 18px;
+}
+
+.union-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+}
+
+.union-card:hover {
+  border-color: rgba(241, 196, 15, 0.3);
+  transform: translateY(-2px);
+}
+
+.union-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.union-card-name {
+  font-size: 18px;
+  font-weight: bold;
+  color: #f1c40f;
+}
+
+.union-card-score {
+  font-size: 14px;
+  color: #a0a0a0;
+}
+
+.union-card-desc {
+  color: #6b7280;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.union-card-stats {
+  color: #6b7280;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.join-union-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+  border: none;
+  border-radius: 10px;
+  color: #1a1a2e;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.join-union-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 5px 20px rgba(241, 196, 15, 0.4);
+}
+
+.my-union {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  border-radius: 20px;
+  padding: 25px;
+}
+
+.my-union-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.my-union-icon {
+  font-size: 50px;
+}
+
+.my-union-name {
+  font-size: 22px;
+  color: #667eea;
+  margin-bottom: 5px;
+}
+
+.my-union-code {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.my-union-code .code {
+  color: #f1c40f;
+  font-family: monospace;
+  background: rgba(241, 196, 15, 0.1);
+  padding: 3px 8px;
+  border-radius: 5px;
+}
+
+.my-union-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.mu-stat {
+  text-align: center;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 15px;
+  border-radius: 12px;
+}
+
+.mu-stat-value {
+  display: block;
+  font-size: 20px;
+  font-weight: bold;
+  color: #f1c40f;
+  margin-bottom: 5px;
+}
+
+.mu-stat-label {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.union-tasks h4 {
+  color: #ffffff;
+  margin-bottom: 15px;
+  font-size: 16px;
+}
+
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.task-icon {
+  font-size: 28px;
+}
+
+.task-info {
+  flex: 1;
+}
+
+.task-name {
+  color: #a0a0a0;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.task-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.task-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.task-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.task-percent {
+  color: #6b7280;
+  font-size: 12px;
+  min-width: 35px;
+}
+
+.leave-union-btn {
+  width: 100%;
+  padding: 15px;
+  background: rgba(231, 76, 60, 0.2);
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  border-radius: 12px;
+  color: #e74c3c;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 20px;
+}
+
+.leave-union-btn:hover {
+  background: rgba(231, 76, 60, 0.3);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.modal {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 25px;
+  width: 100%;
+  max-width: 350px;
+}
+
+.modal h3 {
+  color: #ffffff;
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 20px;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 16px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.modal-cost {
+  text-align: center;
+  color: #f1c40f;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.modal-cancel,
+.modal-confirm {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modal-cancel {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #a0a0a0;
+}
+
+.modal-cancel:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.modal-confirm {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+}
+
+.modal-confirm:hover {
+  transform: scale(1.02);
+}
