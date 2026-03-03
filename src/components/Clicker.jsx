@@ -47,6 +47,34 @@ const Clicker = ({ onScoreUpdate, onStatsUpdate }) => {
   const maxEnergy = baseMaxEnergy + boosts.maxEnergy;
   const scoreMultiplier = boosts.scoreMultiplier;
 
+  // Восстановление энергии за время отсутствия
+  useEffect(() => {
+    const lastLogout = parseInt(localStorage.getItem('clicker_last_logout') || '0');
+    const now = Date.now();
+    
+    if (lastLogout > 0) {
+      const secondsPassed = Math.floor((now - lastLogout) / 1000);
+      
+      if (secondsPassed > 0) {
+        const savedEnergy = parseInt(localStorage.getItem('clicker_energy') || '0');
+        const savedMaxEnergy = parseInt(localStorage.getItem('clicker_max_energy') || '1000');
+        const savedRegen = parseInt(localStorage.getItem('clicker_regen') || '3');
+        
+        // Считаем сколько энергии восстановилось
+        const regenAmount = secondsPassed * savedRegen;
+        const newEnergy = Math.min(savedEnergy + regenAmount, savedMaxEnergy);
+        
+        if (newEnergy > savedEnergy) {
+          setEnergy(newEnergy);
+          console.log(`⚡ Восстановлено ${regenAmount} энергии за ${secondsPassed}с отсутствия`);
+        }
+      }
+    }
+    
+    // Удаляем метку выхода (игрок зашёл)
+    localStorage.removeItem('clicker_last_logout');
+  }, []);
+
   useEffect(() => {
     localStorage.setItem('clicker_score', score.toString());
     localStorage.setItem('clicker_energy', energy.toString());

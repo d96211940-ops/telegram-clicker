@@ -33,7 +33,29 @@ function App() {
 
       document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#1a1a2e');
       document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#ffffff');
+
+      // Сохраняем время выхода при закрытии приложения
+      window.addEventListener('beforeunload', () => {
+        localStorage.setItem('clicker_last_logout', Date.now().toString());
+      });
+
+      // Также сохраняем при сворачивании
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+          localStorage.setItem('clicker_last_logout', Date.now().toString());
+        }
+      });
+
+      // Для Telegram Mini Apps - при закрытии
+      tg.onEvent('main_button_pressed', () => {
+        localStorage.setItem('clicker_last_logout', Date.now().toString());
+      });
     }
+
+    // Сохраняем при размонтировании компонента
+    return () => {
+      localStorage.setItem('clicker_last_logout', Date.now().toString());
+    };
   }, []);
 
   // Сохранение данных игрока в Supabase
