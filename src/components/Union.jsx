@@ -127,6 +127,21 @@ const Union = ({ score, telegramUser }) => {
       setLoading(true);
       const userId = telegramUser?.id?.toString();
       const code = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // Списываем монеты
+      const newScore = score - 5000;
+      localStorage.setItem('clicker_score', newScore.toString());
+      
+      // Обновляем в Supabase
+      if (userId) {
+        await supabase
+          .from('players')
+          .update({ 
+            score: newScore,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', userId);
+      }
 
       // Создаём союз в Supabase
       const { data: newUnion, error: unionError } = await supabase
@@ -169,8 +184,12 @@ const Union = ({ score, telegramUser }) => {
       }));
       localStorage.setItem('clicker_unions', JSON.stringify([...unions, newUnion]));
 
+      // Уведомляем родительский компонент об изменении счёта
+      window.dispatchEvent(new CustomEvent('score-updated', { detail: newScore }));
+
       setShowCreateModal(false);
       setUnionName('');
+      alert('✅ Союз успешно создан! 5000 💰 списано.');
     } catch (error) {
       console.error('Ошибка создания союза:', error);
       alert('❌ Ошибка при создании союза: ' + error.message);

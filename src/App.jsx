@@ -160,7 +160,7 @@ function App() {
       case 'rating':
         return <Rating telegramUser={telegramUser} />;
       case 'cards':
-        return <Cards score={score} onScoreUpdate={handleScoreUpdate} />;
+        return <Cards score={score} onScoreUpdate={handleScoreUpdate} telegramUser={telegramUser} />;
       default:
         return <Clicker onScoreUpdate={handleScoreUpdate} />;
     }

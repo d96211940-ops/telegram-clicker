@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '../supabase';
 import './Cards.css';
 
-const Cards = ({ score, onScoreUpdate }) => {
+const Cards = ({ score, onScoreUpdate, telegramUser }) => {
   const [ownedCards, setOwnedCards] = useState(() => {
     const saved = localStorage.getItem('clicker_owned_cards');
     return saved ? JSON.parse(saved) : [];
@@ -129,7 +130,7 @@ const Cards = ({ score, onScoreUpdate }) => {
     localStorage.setItem('clicker_boosts', JSON.stringify(newBoosts));
   }, [activeCards]);
 
-  const buyCard = (card) => {
+  const buyCard = async (card) => {
     if (score < card.price) {
       alert('❌ Недостаточно монет!');
       return;
@@ -138,9 +139,32 @@ const Cards = ({ score, onScoreUpdate }) => {
       alert('❌ Эта карта уже у вас есть!');
       return;
     }
-    
-    onScoreUpdate(score - card.price);
-    setOwnedCards([...ownedCards, card.id]);
+
+    try {
+      // Списываем монеты
+      const newScore = score - card.price;
+      localStorage.setItem('clicker_score', newScore.toString());
+      
+      // Обновляем в Supabase
+      if (telegramUser?.id) {
+        await supabase
+          .from('players')
+          .update({ 
+            score: newScore,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', telegramUser.id.toString());
+      }
+      
+      // Покупаем карту
+      onScoreUpdate(newScore);
+      setOwnedCards([...ownedCards, card.id]);
+      
+      alert(`✅ Карта "${card.name}" куплена!`);
+    } catch (error) {
+      console.error('Ошибка покупки карты:', error);
+      alert('❌ Ошибка при покупке карты: ' + error.message);
+    }
   };
 
   const toggleCard = (cardId) => {
