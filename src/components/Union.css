@@ -426,3 +426,321 @@
 .modal-confirm:hover {
   transform: scale(1.02);
 }
+
+/* unions-rating styles */
+.unions-rating {
+  margin-top: 30px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 15px;
+}
+
+.rating-header-small {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.rating-header-small h3 {
+  color: #ffffff;
+  font-size: 16px;
+  margin: 0;
+}
+
+.update-timer {
+  color: #667eea;
+  font-size: 12px;
+  background: rgba(102, 126, 234, 0.2);
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.unions-rating-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rating-item-small {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 12px;
+  transition: all 0.3s ease;
+}
+
+.rating-item-small:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+.rating-rank-small {
+  font-size: 20px;
+  min-width: 30px;
+}
+
+.rating-name-small {
+  flex: 1;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.rating-score-small {
+  color: #f1c40f;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* My Union - новый стиль */
+.my-union {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  border-radius: 20px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.mu-section {
+  padding: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mu-section:last-child {
+  border-bottom: none;
+}
+
+.mu-header-section {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+}
+
+.mu-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.mu-icon-large {
+  font-size: 48px;
+}
+
+.mu-title {
+  flex: 1;
+}
+
+.mu-name {
+  font-size: 22px;
+  color: #667eea;
+  margin: 0 0 8px 0;
+  font-weight: bold;
+}
+
+.mu-role-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mu-code-block {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 12px 15px;
+  border-radius: 12px;
+}
+
+.mu-code-label {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.mu-code-value {
+  color: #f1c40f;
+  font-family: monospace;
+  font-size: 16px;
+  font-weight: bold;
+  background: rgba(241, 196, 15, 0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.copy-code-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #ffffff;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.copy-code-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.mu-stats-section {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.mu-section-title {
+  color: #ffffff;
+  font-size: 16px;
+  margin: 0 0 15px 0;
+}
+
+.mu-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.mu-stat-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 15px 10px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.mu-stat-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+.mu-stat-icon {
+  font-size: 24px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.mu-stat-value {
+  display: block;
+  font-size: 18px;
+  font-weight: bold;
+  color: #f1c40f;
+  margin-bottom: 4px;
+}
+
+.mu-stat-label {
+  font-size: 10px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mu-tasks-section {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.mu-tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mu-task-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 15px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.mu-task-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mu-task-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.mu-task-info {
+  flex: 1;
+}
+
+.mu-task-name {
+  color: #a0a0a0;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.mu-task-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mu-task-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.mu-task-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.mu-task-percent {
+  color: #6b7280;
+  font-size: 12px;
+  min-width: 40px;
+  text-align: right;
+}
+
+.mu-actions {
+  padding: 20px;
+}
+
+.mu-btn {
+  width: 100%;
+  padding: 15px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.mu-btn-secondary {
+  background: rgba(231, 76, 60, 0.2);
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  color: #e74c3c;
+}
+
+.mu-btn-secondary:hover {
+  background: rgba(231, 76, 60, 0.3);
+}
+
+.mu-btn-danger {
+  background: rgba(231, 76, 60, 0.25);
+  border: 1px solid rgba(231, 76, 60, 0.4);
+  color: #ff6b6b;
+}
+
+.mu-btn-danger:hover {
+  background: rgba(231, 76, 60, 0.4);
+  box-shadow: 0 5px 20px rgba(231, 76, 60, 0.3);
+}

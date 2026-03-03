@@ -6,15 +6,56 @@ const Union = ({ score }) => {
     const saved = localStorage.getItem('clicker_my_union');
     return saved ? JSON.parse(saved) : null;
   });
-  
+
+  const [unions, setUnions] = useState(() => {
+    const saved = localStorage.getItem('clicker_unions');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [unionName, setUnionName] = useState('');
   const [joinCode, setJoinCode] = useState('');
+  const [lastUpdate, setLastUpdate] = useState(Date.now());
+  const [timeUntilUpdate, setTimeUntilUpdate] = useState(60);
 
+  // Инициализация союзов при первом запуске
+  useEffect(() => {
+    if (unions.length === 0) {
+      // Пустой массив - союзы создаются игроками
+    }
+  }, []);
+
+  // Сохранение моего союза
   useEffect(() => {
     localStorage.setItem('clicker_my_union', JSON.stringify(myUnion));
   }, [myUnion]);
+
+  // Сохранение всех союзов
+  useEffect(() => {
+    localStorage.setItem('clicker_unions', JSON.stringify(unions));
+  }, [unions]);
+
+  // Обновление рейтинга каждые 60 секунд
+  useEffect(() => {
+    const updateRating = () => {
+      setLastUpdate(Date.now());
+      setTimeUntilUpdate(60);
+    };
+
+    // Таймер обратного отсчета
+    const countdownInterval = setInterval(() => {
+      setTimeUntilUpdate(prev => {
+        if (prev <= 1) {
+          updateRating();
+          return 60;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(countdownInterval);
+  }, []);
 
   const createUnion = () => {
     if (score < 5000) {
@@ -25,7 +66,7 @@ const Union = ({ score }) => {
       alert('❌ Название должно быть не менее 3 символов!');
       return;
     }
-    
+
     const newUnion = {
       id: Date.now(),
       name: unionName,
@@ -34,8 +75,11 @@ const Union = ({ score }) => {
       score: 0,
       description: 'Новый перспективный союз',
       role: 'Создатель',
+      createdAt: Date.now(),
     };
-    
+
+    // Добавляем союз в общий список
+    setUnions([...unions, newUnion]);
     setMyUnion(newUnion);
     setShowCreateModal(false);
     setUnionName('');
@@ -47,16 +91,57 @@ const Union = ({ score }) => {
       return;
     }
 
-    // Здесь будет логика поиска по коду (нужен бэкенд)
-    alert('🔜 Функция вступления по коду скоро будет доступна!');
+    // Ищем союз по коду
+    const targetUnion = unions.find(u => u.code === joinCode);
+    
+    if (!targetUnion) {
+      alert('❌ Союз с таким кодом не найден! Проверьте код и попробуйте снова.');
+      return;
+    }
+
+    // Вступаем в союз
+    const joinedUnion = {
+      ...targetUnion,
+      role: 'Участник',
+      members: targetUnion.members + 1,
+    };
+
+    // Обновляем союз в списке
+    setUnions(unions.map(u => 
+      u.id === targetUnion.id ? joinedUnion : u
+    ));
+    
+    setMyUnion(joinedUnion);
     setShowJoinModal(false);
+    setJoinCode('');
   };
 
   const leaveUnion = () => {
     if (confirm('Вы уверены, что хотите покинуть союз?')) {
+      // Если это создатель - удаляем союз, иначе просто выходим
+      if (myUnion.role === 'Создатель') {
+        setUnions(unions.filter(u => u.id !== myUnion.id));
+      } else {
+        // Уменьшаем количество участников
+        setUnions(unions.map(u => 
+          u.id === myUnion.id ? { ...u, members: Math.max(0, u.members - 1) } : u
+        ));
+      }
       setMyUnion(null);
     }
   };
+
+  const deleteUnion = () => {
+    if (confirm('⚠️ Вы уверены, что хотите удалить союз? Это действие нельзя отменить!')) {
+      if (confirm('❗ Все участники союза будут исключены. Продолжить?')) {
+        setUnions(unions.filter(u => u.id !== myUnion.id));
+        setMyUnion(null);
+      }
+    }
+  };
+
+  // Считаем количество союзов для рейтинга
+  const sortedUnions = [...unions].sort((a, b) => b.score - a.score);
 
   return (
     <div className="union">
@@ -109,66 +194,137 @@ const Union = ({ score }) => {
               </div>
             </div>
           </div>
+
+          {/* Рейтинг союзов */}
+          {unions.length > 0 && (
+            <div className="unions-rating">
+              <div className="rating-header-small">
+                <h3>🏆 Рейтинг союзов</h3>
+                <span className="update-timer">🔄 {timeUntilUpdate}с</span>
+              </div>
+              <div className="unions-rating-list">
+                {sortedUnions.slice(0, 5).map((union, index) => (
+                  <div key={union.id} className="rating-item-small">
+                    <span className="rating-rank-small">
+                      {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                    </span>
+                    <span className="rating-name-small">{union.name}</span>
+                    <span className="rating-score-small">{union.score.toLocaleString()} 💰</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </>
       ) : (
         <div className="my-union">
-          <div className="my-union-header">
-            <div className="my-union-icon">🛡️</div>
-            <div>
-              <h3 className="my-union-name">{myUnion.name}</h3>
-              <div className="my-union-code">Код: <span className="code">{myUnion.code}</span></div>
+          {/* Заголовок */}
+          <div className="mu-section mu-header-section">
+            <div className="mu-header">
+              <div className="mu-icon-large">🛡️</div>
+              <div className="mu-title">
+                <h3 className="mu-name">{myUnion.name}</h3>
+                <div className="mu-role-badge">{myUnion.role}</div>
+              </div>
             </div>
-          </div>
-          
-          <div className="my-union-stats">
-            <div className="mu-stat">
-              <span className="mu-stat-value">{myUnion.members}</span>
-              <span className="mu-stat-label">Участников</span>
-            </div>
-            <div className="mu-stat">
-              <span className="mu-stat-value">{myUnion.score.toLocaleString()}</span>
-              <span className="mu-stat-label">Очко союза</span>
-            </div>
-            <div className="mu-stat">
-              <span className="mu-stat-value">{myUnion.role}</span>
-              <span className="mu-stat-label">Ваша роль</span>
+            <div className="mu-code-block">
+              <span className="mu-code-label">Код приглашения:</span>
+              <span className="mu-code-value">{myUnion.code}</span>
+              <button 
+                className="copy-code-btn"
+                onClick={() => {
+                  navigator.clipboard.writeText(myUnion.code);
+                  alert('✅ Код скопирован!');
+                }}
+              >
+                📋
+              </button>
             </div>
           </div>
 
-          <div className="union-tasks">
-            <h4>📌 Задачи союза</h4>
-            <div className="task-item">
-              <span className="task-icon">👆</span>
-              <div className="task-info">
-                <div className="task-name">Сделать 100 кликов</div>
-                <div className="task-progress">
-                  <div className="task-bar">
-                    <div className="task-fill" style={{ width: '65%' }}></div>
-                  </div>
-                  <span className="task-percent">65%</span>
-                </div>
+          {/* Статистика */}
+          <div className="mu-section mu-stats-section">
+            <h4 className="mu-section-title">📊 Статистика союза</h4>
+            <div className="mu-stats-grid">
+              <div className="mu-stat-card">
+                <span className="mu-stat-icon">👥</span>
+                <span className="mu-stat-value">{myUnion.members}</span>
+                <span className="mu-stat-label">Участников</span>
               </div>
-            </div>
-            <div className="task-item">
-              <span className="task-icon">💎</span>
-              <div className="task-info">
-                <div className="task-name">Заработать 50,000 монет</div>
-                <div className="task-progress">
-                  <div className="task-bar">
-                    <div className="task-fill" style={{ width: '30%' }}></div>
-                  </div>
-                  <span className="task-percent">30%</span>
-                </div>
+              <div className="mu-stat-card">
+                <span className="mu-stat-icon">💰</span>
+                <span className="mu-stat-value">{myUnion.score.toLocaleString()}</span>
+                <span className="mu-stat-label">Очки союза</span>
+              </div>
+              <div className="mu-stat-card">
+                <span className="mu-stat-icon">📅</span>
+                <span className="mu-stat-value">
+                  {new Date(myUnion.createdAt || Date.now()).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
+                </span>
+                <span className="mu-stat-label">Создан</span>
               </div>
             </div>
           </div>
 
-          <button className="leave-union-btn" onClick={leaveUnion}>
-            🚪 Покинуть союз
-          </button>
+          {/* Задачи */}
+          <div className="mu-section mu-tasks-section">
+            <h4 className="mu-section-title">📌 Задачи союза</h4>
+            <div className="mu-tasks-list">
+              <div className="mu-task-item">
+                <span className="mu-task-icon">👆</span>
+                <div className="mu-task-info">
+                  <div className="mu-task-name">Сделать 100 кликов</div>
+                  <div className="mu-task-progress">
+                    <div className="mu-task-bar">
+                      <div className="mu-task-fill" style={{ width: '65%' }}></div>
+                    </div>
+                    <span className="mu-task-percent">65%</span>
+                  </div>
+                </div>
+              </div>
+              <div className="mu-task-item">
+                <span className="mu-task-icon">💎</span>
+                <div className="mu-task-info">
+                  <div className="mu-task-name">Заработать 50,000 монет</div>
+                  <div className="mu-task-progress">
+                    <div className="mu-task-bar">
+                      <div className="mu-task-fill" style={{ width: '30%' }}></div>
+                    </div>
+                    <span className="mu-task-percent">30%</span>
+                  </div>
+                </div>
+              </div>
+              <div className="mu-task-item">
+                <span className="mu-task-icon">🎯</span>
+                <div className="mu-task-info">
+                  <div className="mu-task-name">Привлечь 5 участников</div>
+                  <div className="mu-task-progress">
+                    <div className="mu-task-bar">
+                      <div className="mu-task-fill" style={{ width: `${Math.min((myUnion.members / 5) * 100, 100)}%` }}></div>
+                    </div>
+                    <span className="mu-task-percent">{Math.min((myUnion.members / 5) * 100, 100).toFixed(0)}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Кнопки действий */}
+          <div className="mu-actions">
+            {myUnion.role === 'Создатель' ? (
+              <button className="mu-btn mu-btn-danger" onClick={deleteUnion}>
+                🗑️ Удалить союз
+              </button>
+            ) : (
+              <button className="mu-btn mu-btn-secondary" onClick={leaveUnion}>
+                🚪 Покинуть союз
+              </button>
+            )}
+          </div>
         </div>
       )}
 
+      {/* Модальное создание союза */}
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -194,6 +350,7 @@ const Union = ({ score }) => {
         </div>
       )}
 
+      {/* Модальное вступление */}
       {showJoinModal && (
         <div className="modal-overlay" onClick={() => setShowJoinModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
