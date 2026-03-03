@@ -11,15 +11,6 @@ const Union = ({ score }) => {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [unionName, setUnionName] = useState('');
   const [joinCode, setJoinCode] = useState('');
-  const [myUnions, setMyUnions] = useState([]);
-
-  const availableUnions = [
-    { id: 1, name: '🚀 Космические Таперы', members: 1247, score: 5000000, description: 'Покоряем космос вместе!' },
-    { id: 2, name: '💎 Крипто Магнаты', members: 892, score: 3500000, description: 'Зарабатываем миллионы' },
-    { id: 3, name: '🔥 Огненные Комбо', members: 654, score: 2100000, description: 'Максимальные комбо!' },
-    { id: 4, name: '⚡ Молниеносные', members: 445, score: 1800000, description: 'Быстрые клики - большие награды' },
-    { id: 5, name: '🌟 Звёздная Лига', members: 321, score: 1200000, description: 'Только лучшие из лучших' },
-  ];
 
   useEffect(() => {
     localStorage.setItem('clicker_my_union', JSON.stringify(myUnion));
@@ -50,13 +41,14 @@ const Union = ({ score }) => {
     setUnionName('');
   };
 
-  const joinUnion = (union) => {
+  const joinUnion = () => {
     if (myUnion) {
       alert('❌ Вы уже состоите в союзе!');
       return;
     }
-    
-    setMyUnion({ ...union, role: 'Участник' });
+
+    // Здесь будет логика поиска по коду (нужен бэкенд)
+    alert('🔜 Функция вступления по коду скоро будет доступна!');
     setShowJoinModal(false);
   };
 
@@ -76,7 +68,7 @@ const Union = ({ score }) => {
       {!myUnion ? (
         <>
           <div className="union-actions">
-            <button 
+            <button
               className="action-btn create-btn"
               onClick={() => setShowCreateModal(true)}
               disabled={score < 5000}
@@ -87,39 +79,35 @@ const Union = ({ score }) => {
                 <small>5000 💰</small>
               </div>
             </button>
-            
-            <button 
+
+            <button
               className="action-btn join-btn"
               onClick={() => setShowJoinModal(true)}
             >
               <span className="btn-icon">🚪</span>
               <div className="btn-text">
-                <div>Вступить</div>
+                <div>Вступить по коду</div>
                 <small>Бесплатно</small>
               </div>
             </button>
           </div>
 
-          <div className="unions-list">
-            <h3>📋 Популярные союзы</h3>
-            {availableUnions.map(union => (
-              <div key={union.id} className="union-card">
-                <div className="union-card-header">
-                  <div className="union-card-name">{union.name}</div>
-                  <div className="union-card-score">{union.score.toLocaleString()} 💰</div>
-                </div>
-                <div className="union-card-desc">{union.description}</div>
-                <div className="union-card-stats">
-                  <span>👥 {union.members} участников</span>
-                </div>
-                <button 
-                  className="join-union-btn"
-                  onClick={() => joinUnion(union)}
-                >
-                  Вступить
-                </button>
+          <div className="union-info-block">
+            <h3>📖 Как это работает?</h3>
+            <div className="info-card">
+              <div className="info-icon">✨</div>
+              <div className="info-text">
+                <div className="info-title">Создайте свой союз</div>
+                <div className="info-desc">Стоимость создания: 5000 монет. Пригласите друзей и развивайтесь вместе!</div>
               </div>
-            ))}
+            </div>
+            <div className="info-card">
+              <div className="info-icon">🔑</div>
+              <div className="info-text">
+                <div className="info-title">Вступите по коду</div>
+                <div className="info-desc">Получите код приглашения от друга и вступите в его союз бесплатно.</div>
+              </div>
+            </div>
           </div>
         </>
       ) : (
@@ -218,15 +206,12 @@ const Union = ({ score }) => {
               maxLength={6}
               className="modal-input"
             />
+            <div className="modal-hint">Введите код, который вам дал создатель союза</div>
             <div className="modal-actions">
               <button className="modal-cancel" onClick={() => setShowJoinModal(false)}>
                 Отмена
               </button>
-              <button className="modal-confirm" onClick={() => {
-                const found = availableUnions.find(u => u.code === joinCode);
-                if (found) joinUnion(found);
-                else alert('❌ Неверный код!');
-              }}>
+              <button className="modal-confirm" onClick={joinUnion} disabled={joinCode.length < 6}>
                 Вступить
               </button>
             </div>

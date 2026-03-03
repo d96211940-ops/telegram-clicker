@@ -76,6 +76,63 @@
   font-size: 12px;
 }
 
+/* Info block styles */
+.union-info-block {
+  margin-top: 25px;
+}
+
+.union-info-block h3 {
+  color: #ffffff;
+  margin-bottom: 15px;
+  font-size: 18px;
+}
+
+.info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 12px;
+  transition: all 0.3s ease;
+}
+
+.info-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+.info-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+.info-text {
+  flex: 1;
+}
+
+.info-title {
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 5px;
+}
+
+.info-desc {
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.modal-hint {
+  color: #6b7280;
+  font-size: 12px;
+  text-align: center;
+  margin: 10px 0 15px 0;
+}
+
 .unions-list h3 {
   color: #ffffff;
   margin-bottom: 15px;
