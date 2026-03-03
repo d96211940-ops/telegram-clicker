@@ -1,53 +1,31 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '../supabase';
 import './Union.css';
 
-const Union = ({ score }) => {
-  const [myUnion, setMyUnion] = useState(() => {
-    const saved = localStorage.getItem('clicker_my_union');
-    return saved ? JSON.parse(saved) : null;
-  });
-
-  const [unions, setUnions] = useState(() => {
-    const saved = localStorage.getItem('clicker_unions');
-    return saved ? JSON.parse(saved) : [];
-  });
-
+const Union = ({ score, telegramUser }) => {
+  const [myUnion, setMyUnion] = useState(null);
+  const [unions, setUnions] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [unionName, setUnionName] = useState('');
   const [joinCode, setJoinCode] = useState('');
-  const [lastUpdate, setLastUpdate] = useState(Date.now());
   const [timeUntilUpdate, setTimeUntilUpdate] = useState(60);
 
-  // Инициализация союзов при первом запуске
+  // Загрузка данных
   useEffect(() => {
-    if (unions.length === 0) {
-      // Пустой массив - союзы создаются игроками
+    loadUnions();
+    if (telegramUser?.id) {
+      loadMyUnion(telegramUser.id.toString());
     }
-  }, []);
+  }, [telegramUser]);
 
-  // Сохранение моего союза
+  // Таймер обновления рейтинга
   useEffect(() => {
-    localStorage.setItem('clicker_my_union', JSON.stringify(myUnion));
-  }, [myUnion]);
-
-  // Сохранение всех союзов
-  useEffect(() => {
-    localStorage.setItem('clicker_unions', JSON.stringify(unions));
-  }, [unions]);
-
-  // Обновление рейтинга каждые 60 секунд
-  useEffect(() => {
-    const updateRating = () => {
-      setLastUpdate(Date.now());
-      setTimeUntilUpdate(60);
-    };
-
-    // Таймер обратного отсчета
     const countdownInterval = setInterval(() => {
       setTimeUntilUpdate(prev => {
         if (prev <= 1) {
-          updateRating();
+          loadUnions();
           return 60;
         }
         return prev - 1;
@@ -57,7 +35,85 @@ const Union = ({ score }) => {
     return () => clearInterval(countdownInterval);
   }, []);
 
-  const createUnion = () => {
+  // Загрузка всех союзов для рейтинга
+  const loadUnions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('unions')
+        .select('*')
+        .order('score', { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+      setUnions(data || []);
+    } catch (error) {
+      console.error('Ошибка загрузки союзов:', error);
+      // Fallback к localStorage если Supabase недоступен
+      const saved = localStorage.getItem('clicker_unions');
+      if (saved) {
+        setUnions(JSON.parse(saved));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Загрузка моего союза
+  const loadMyUnion = async (userId) => {
+    try {
+      // Сначала проверяем в union_members
+      const { data: memberData, error: memberError } = await supabase
+        .from('union_members')
+        .select('union_id, role')
+        .eq('user_id', userId)
+        .single();
+
+      if (memberError && memberError.code !== 'PGRST116') throw memberError;
+
+      if (memberData) {
+        // Получаем данные союза
+        const { data: unionData, error: unionError } = await supabase
+          .from('unions')
+          .select('*')
+          .eq('id', memberData.union_id)
+          .single();
+
+        if (unionError) throw unionError;
+
+        setMyUnion({
+          ...unionData,
+          role: memberData.role,
+        });
+        return;
+      }
+
+      // Проверяем, не является ли пользователь владельцем союза
+      const { data: ownerData, error: ownerError } = await supabase
+        .from('unions')
+        .select('*')
+        .eq('owner_id', userId)
+        .single();
+
+      if (ownerError && ownerError.code !== 'PGRST116') throw ownerError;
+
+      if (ownerData) {
+        setMyUnion({
+          ...ownerData,
+          role: 'Создатель',
+        });
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки моего союза:', error);
+      // Fallback к localStorage
+      const saved = localStorage.getItem('clicker_my_union');
+      if (saved) {
+        setMyUnion(JSON.parse(saved));
+      }
+    }
+  };
+
+  // Создание союза
+  const createUnion = async () => {
     if (score < 5000) {
       alert('❌ Нужно минимум 5000 монет для создания союза!');
       return;
@@ -67,80 +123,201 @@ const Union = ({ score }) => {
       return;
     }
 
-    const newUnion = {
-      id: Date.now(),
-      name: unionName,
-      code: Math.floor(100000 + Math.random() * 900000).toString(),
-      members: 1,
-      score: 0,
-      description: 'Новый перспективный союз',
-      role: 'Создатель',
-      createdAt: Date.now(),
-    };
+    try {
+      setLoading(true);
+      const userId = telegramUser?.id?.toString();
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Добавляем союз в общий список
-    setUnions([...unions, newUnion]);
-    setMyUnion(newUnion);
-    setShowCreateModal(false);
-    setUnionName('');
+      // Создаём союз в Supabase
+      const { data: newUnion, error: unionError } = await supabase
+        .from('unions')
+        .insert([{
+          name: unionName,
+          code,
+          members: 1,
+          score: 0,
+          description: 'Новый перспективный союз',
+          owner_id: userId,
+        }])
+        .select()
+        .single();
+
+      if (unionError) throw unionError;
+
+      // Добавляем создателя как участника
+      const { error: memberError } = await supabase
+        .from('union_members')
+        .insert([{
+          union_id: newUnion.id,
+          user_id: userId,
+          role: 'Создатель',
+        }]);
+
+      if (memberError) throw memberError;
+
+      // Обновляем локальное состояние
+      setMyUnion({
+        ...newUnion,
+        role: 'Создатель',
+      });
+      setUnions([...unions, newUnion]);
+
+      // Сохраняем в localStorage для кэша
+      localStorage.setItem('clicker_my_union', JSON.stringify({
+        ...newUnion,
+        role: 'Создатель',
+      }));
+      localStorage.setItem('clicker_unions', JSON.stringify([...unions, newUnion]));
+
+      setShowCreateModal(false);
+      setUnionName('');
+    } catch (error) {
+      console.error('Ошибка создания союза:', error);
+      alert('❌ Ошибка при создании союза: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const joinUnion = () => {
+  // Вступление в союз
+  const joinUnion = async () => {
     if (myUnion) {
       alert('❌ Вы уже состоите в союзе!');
       return;
     }
 
-    // Ищем союз по коду
-    const targetUnion = unions.find(u => u.code === joinCode);
-    
-    if (!targetUnion) {
-      alert('❌ Союз с таким кодом не найден! Проверьте код и попробуйте снова.');
-      return;
+    try {
+      setLoading(true);
+
+      // Ищем союз по коду
+      const { data: targetUnion, error: findError } = await supabase
+        .from('unions')
+        .select('*')
+        .eq('code', joinCode)
+        .single();
+
+      if (findError || !targetUnion) {
+        alert('❌ Союз с таким кодом не найден!');
+        return;
+      }
+
+      const userId = telegramUser?.id?.toString();
+
+      // Добавляем участника
+      const { error: memberError } = await supabase
+        .from('union_members')
+        .insert([{
+          union_id: targetUnion.id,
+          user_id: userId,
+          role: 'Участник',
+        }]);
+
+      if (memberError) throw memberError;
+
+      // Обновляем количество участников
+      const { data: updatedUnion } = await supabase
+        .from('unions')
+        .update({ members: targetUnion.members + 1 })
+        .eq('id', targetUnion.id)
+        .select()
+        .single();
+
+      setMyUnion({
+        ...updatedUnion,
+        role: 'Участник',
+      });
+
+      // Обновляем список
+      setUnions(unions.map(u => 
+        u.id === targetUnion.id ? { ...u, members: u.members + 1 } : u
+      ));
+
+      // Кэш в localStorage
+      localStorage.setItem('clicker_my_union', JSON.stringify({
+        ...updatedUnion,
+        role: 'Участник',
+      }));
+
+      setShowJoinModal(false);
+      setJoinCode('');
+    } catch (error) {
+      console.error('Ошибка вступления в союз:', error);
+      alert('❌ Ошибка при вступлении в союз: ' + error.message);
+    } finally {
+      setLoading(false);
     }
-
-    // Вступаем в союз
-    const joinedUnion = {
-      ...targetUnion,
-      role: 'Участник',
-      members: targetUnion.members + 1,
-    };
-
-    // Обновляем союз в списке
-    setUnions(unions.map(u => 
-      u.id === targetUnion.id ? joinedUnion : u
-    ));
-    
-    setMyUnion(joinedUnion);
-    setShowJoinModal(false);
-    setJoinCode('');
   };
 
-  const leaveUnion = () => {
-    if (confirm('Вы уверены, что хотите покинуть союз?')) {
-      // Если это создатель - удаляем союз, иначе просто выходим
+  // Выход из союза
+  const leaveUnion = async () => {
+    if (!confirm('Вы уверены, что хотите покинуть союз?')) return;
+
+    try {
+      setLoading(true);
+      const userId = telegramUser?.id?.toString();
+
       if (myUnion.role === 'Создатель') {
-        setUnions(unions.filter(u => u.id !== myUnion.id));
-      } else {
-        // Уменьшаем количество участников
-        setUnions(unions.map(u => 
-          u.id === myUnion.id ? { ...u, members: Math.max(0, u.members - 1) } : u
-        ));
+        // Создатель удаляет союз
+        await deleteUnion();
+        return;
       }
+
+      // Удаляем участника
+      const { error } = await supabase
+        .from('union_members')
+        .delete()
+        .eq('user_id', userId)
+        .eq('union_id', myUnion.id);
+
+      if (error) throw error;
+
+      // Уменьшаем счётчик участников
+      await supabase
+        .from('unions')
+        .update({ members: Math.max(0, myUnion.members - 1) })
+        .eq('id', myUnion.id);
+
       setMyUnion(null);
+      setUnions(unions.map(u => 
+        u.id === myUnion.id ? { ...u, members: Math.max(0, u.members - 1) } : u
+      ));
+
+      localStorage.removeItem('clicker_my_union');
+    } catch (error) {
+      console.error('Ошибка выхода из союза:', error);
+      alert('❌ Ошибка: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const deleteUnion = () => {
-    if (confirm('⚠️ Вы уверены, что хотите удалить союз? Это действие нельзя отменить!')) {
-      if (confirm('❗ Все участники союза будут исключены. Продолжить?')) {
-        setUnions(unions.filter(u => u.id !== myUnion.id));
-        setMyUnion(null);
-      }
+  // Удаление союза (для создателя)
+  const deleteUnion = async () => {
+    if (!confirm('⚠️ Вы уверены, что хотите удалить союз? Это действие нельзя отменить!')) return;
+    if (!confirm('❗ Все участники союза будут исключены. Продолжить?')) return;
+
+    try {
+      setLoading(true);
+
+      // Удаляем союз (участники удалятся каскадом)
+      const { error } = await supabase
+        .from('unions')
+        .delete()
+        .eq('id', myUnion.id);
+
+      if (error) throw error;
+
+      setMyUnion(null);
+      setUnions(unions.filter(u => u.id !== myUnion.id));
+      localStorage.removeItem('clicker_my_union');
+    } catch (error) {
+      console.error('Ошибка удаления союза:', error);
+      alert('❌ Ошибка: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Считаем количество союзов для рейтинга
   const sortedUnions = [...unions].sort((a, b) => b.score - a.score);
 
   return (
@@ -156,7 +333,7 @@ const Union = ({ score }) => {
             <button
               className="action-btn create-btn"
               onClick={() => setShowCreateModal(true)}
-              disabled={score < 5000}
+              disabled={score < 5000 || loading}
             >
               <span className="btn-icon">✨</span>
               <div className="btn-text">
@@ -168,6 +345,7 @@ const Union = ({ score }) => {
             <button
               className="action-btn join-btn"
               onClick={() => setShowJoinModal(true)}
+              disabled={loading}
             >
               <span className="btn-icon">🚪</span>
               <div className="btn-text">
@@ -196,7 +374,7 @@ const Union = ({ score }) => {
           </div>
 
           {/* Рейтинг союзов */}
-          {unions.length > 0 && (
+          {!loading && unions.length > 0 && (
             <div className="unions-rating">
               <div className="rating-header-small">
                 <h3>🏆 Рейтинг союзов</h3>
@@ -214,6 +392,10 @@ const Union = ({ score }) => {
                 ))}
               </div>
             </div>
+          )}
+
+          {loading && unions.length === 0 && (
+            <div className="loading-text">🔄 Загрузка...</div>
           )}
         </>
       ) : (
@@ -259,7 +441,7 @@ const Union = ({ score }) => {
               <div className="mu-stat-card">
                 <span className="mu-stat-icon">📅</span>
                 <span className="mu-stat-value">
-                  {new Date(myUnion.createdAt || Date.now()).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
+                  {new Date(myUnion.created_at || Date.now()).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
                 </span>
                 <span className="mu-stat-label">Создан</span>
               </div>
@@ -312,12 +494,12 @@ const Union = ({ score }) => {
           {/* Кнопки действий */}
           <div className="mu-actions">
             {myUnion.role === 'Создатель' ? (
-              <button className="mu-btn mu-btn-danger" onClick={deleteUnion}>
-                🗑️ Удалить союз
+              <button className="mu-btn mu-btn-danger" onClick={deleteUnion} disabled={loading}>
+                {loading ? '⏳...' : '🗑️ Удалить союз'}
               </button>
             ) : (
-              <button className="mu-btn mu-btn-secondary" onClick={leaveUnion}>
-                🚪 Покинуть союз
+              <button className="mu-btn mu-btn-secondary" onClick={leaveUnion} disabled={loading}>
+                {loading ? '⏳...' : '🚪 Покинуть союз'}
               </button>
             )}
           </div>
@@ -342,8 +524,8 @@ const Union = ({ score }) => {
               <button className="modal-cancel" onClick={() => setShowCreateModal(false)}>
                 Отмена
               </button>
-              <button className="modal-confirm" onClick={createUnion}>
-                Создать
+              <button className="modal-confirm" onClick={createUnion} disabled={loading}>
+                {loading ? '⏳...' : 'Создать'}
               </button>
             </div>
           </div>
@@ -368,8 +550,8 @@ const Union = ({ score }) => {
               <button className="modal-cancel" onClick={() => setShowJoinModal(false)}>
                 Отмена
               </button>
-              <button className="modal-confirm" onClick={joinUnion} disabled={joinCode.length < 6}>
-                Вступить
+              <button className="modal-confirm" onClick={joinUnion} disabled={joinCode.length < 6 || loading}>
+                {loading ? '⏳...' : 'Вступить'}
               </button>
             </div>
           </div>

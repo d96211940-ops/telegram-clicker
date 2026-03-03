@@ -59,7 +59,7 @@ function App() {
       case 'clicker':
         return <Clicker onScoreUpdate={handleScoreUpdate} />;
       case 'union':
-        return <Union score={score} />;
+        return <Union score={score} telegramUser={telegramUser} />;
       case 'rating':
         return <Rating />;
       case 'cards':
