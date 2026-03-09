@@ -27,14 +27,13 @@ const Rating = ({ telegramUser }) => {
       const { data: playersData, error: playersError } = await supabase
         .from('players')
         .select('*')
-        .order('score', { ascending: false })
+        .order('total_earned', { ascending: false })
         .limit(100);
 
       if (playersError) throw playersError;
       setPlayersRating(playersData || []);
     } catch (error) {
       console.error('Ошибка загрузки рейтинга:', error);
-      // Fallback к пустым массивам
       setUnionsRating([]);
       setPlayersRating([]);
     } finally {
@@ -45,7 +44,6 @@ const Rating = ({ telegramUser }) => {
   useEffect(() => {
     loadRating();
 
-    // Таймер обновления каждые 60 секунд
     const countdownInterval = setInterval(() => {
       setTimeUntilUpdate(prev => {
         if (prev <= 1) {
@@ -59,13 +57,23 @@ const Rating = ({ telegramUser }) => {
     return () => clearInterval(countdownInterval);
   }, []);
 
-  const getChangeIcon = (change) => {
-    if (change > 0) return <span className="change-up">↑{change}</span>;
-    if (change < 0) return <span className="change-down">↓{Math.abs(change)}</span>;
-    return <span className="change-same">-</span>;
+  const currentData = activeTab === 'unions' ? unionsRating : playersRating;
+
+  // Медали для топ-3
+  const getMedal = (index) => {
+    if (index === 0) return '🥇';
+    if (index === 1) return '🥈';
+    if (index === 2) return '🥉';
+    return null;
   };
 
-  const currentData = activeTab === 'unions' ? unionsRating : playersRating;
+  // Класс для позиции
+  const getRankClass = (index) => {
+    if (index === 0) return 'rank-1';
+    if (index === 1) return 'rank-2';
+    if (index === 2) return 'rank-3';
+    return '';
+  };
 
   return (
     <div className="rating">
@@ -91,7 +99,7 @@ const Rating = ({ telegramUser }) => {
 
       {loading ? (
         <div className="rating-loading">
-          <div className="loading-icon">🔄</div>
+          <div className="loading-spinner">🔄</div>
           <p>Загрузка рейтинга...</p>
         </div>
       ) : currentData.length === 0 ? (
@@ -99,36 +107,98 @@ const Rating = ({ telegramUser }) => {
           <div className="empty-icon">📊</div>
           <h3>Рейтинг пуст</h3>
           <p>
-            {activeTab === 'unions' 
+            {activeTab === 'unions'
               ? 'Создайте союз или вступите в существующий,\nчтобы попасть в рейтинг!'
               : 'Играйте активно и зарабатывайте монеты,\nчтобы попасть в топ игроков!'}
           </p>
         </div>
       ) : (
         <div className="rating-list">
-          {currentData.map((item, index) => (
+          {/* Топ-3 с особым оформлением */}
+          {currentData.slice(0, 3).map((item, index) => (
             <div
-              key={activeTab === 'unions' ? item.id : item.id}
-              className={`rating-item ${index < 3 ? `rank-${index + 1}` : ''}`}
+              key={`top-${item.id}`}
+              className={`rating-item rating-item-top ${getRankClass(index)}`}
             >
-              <div className="rating-rank">
-                <span className={`rank-number ${index < 3 ? `rank-${index + 1}` : ''}`}>
-                  {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
-                </span>
-                {getChangeIcon(0)}
+              <div className="top-medal">{getMedal(index)}</div>
+              <div className="top-avatar">
+                {activeTab === 'unions' ? (
+                  <div className="union-avatar" style={{ background: item.logo_color || '#667eea' }}>
+                    {item.logo_emoji || '🔱'}
+                  </div>
+                ) : (
+                  <div className="player-avatar">
+                    {item.photo_url ? (
+                      <img src={item.photo_url} alt={item.first_name} />
+                    ) : (
+                      <span>{item.first_name?.[0]?.toUpperCase() || '👤'}</span>
+                    )}
+                  </div>
+                )}
               </div>
-
-              <div className="rating-info">
-                <div className="rating-name">
+              <div className="top-info">
+                <div className="top-name">
                   {activeTab === 'unions' ? item.name : (
                     <>
-                      {item.first_name}
+                      {item.first_name} {item.last_name || ''}
                       {item.username && <span className="rating-username">@{item.username}</span>}
                     </>
                   )}
                 </div>
                 {activeTab === 'players' && item.level && (
-                  <div className="rating-level">Уровень {item.level}</div>
+                  <div className="top-level">⭐ Уровень {item.level}</div>
+                )}
+                {activeTab === 'unions' && item.members && (
+                  <div className="top-members">👥 {item.members.toLocaleString()} участников</div>
+                )}
+              </div>
+              <div className="top-score">
+                <div className="score-value">
+                  {activeTab === 'unions'
+                    ? item.score?.toLocaleString()
+                    : item.total_earned?.toLocaleString() || 0}
+                </div>
+                <div className="score-label">💰 монет</div>
+              </div>
+              <div className="top-glow"></div>
+            </div>
+          ))}
+
+          {/* Остальные игроки */}
+          {currentData.slice(3).map((item, index) => (
+            <div
+              key={item.id}
+              className="rating-item"
+            >
+              <div className="rating-rank">
+                <span className="rank-number">#{index + 4}</span>
+              </div>
+
+              <div className="rating-info">
+                {activeTab === 'unions' && item.logo_emoji && (
+                  <div className="rating-union-logo" style={{ background: item.logo_color || '#667eea' }}>
+                    {item.logo_emoji}
+                  </div>
+                )}
+                {activeTab === 'players' && (
+                  <div className="rating-player-avatar">
+                    {item.photo_url ? (
+                      <img src={item.photo_url} alt={item.first_name} />
+                    ) : (
+                      <span>{item.first_name?.[0]?.toUpperCase() || '👤'}</span>
+                    )}
+                  </div>
+                )}
+                <div className="rating-name">
+                  {activeTab === 'unions' ? item.name : (
+                    <>
+                      {item.first_name} {item.last_name || ''}
+                      {item.username && <span className="rating-username">@{item.username}</span>}
+                    </>
+                  )}
+                </div>
+                {activeTab === 'players' && item.level && (
+                  <div className="rating-level">Ур. {item.level}</div>
                 )}
                 {activeTab === 'unions' && item.members && (
                   <div className="rating-members">👥 {item.members.toLocaleString()}</div>
@@ -136,9 +206,9 @@ const Rating = ({ telegramUser }) => {
               </div>
 
               <div className="rating-score">
-                {activeTab === 'unions' 
-                  ? `${item.score.toLocaleString()} 💰`
-                  : `${item.total_clicks?.toLocaleString() || 0} 👆`}
+                {activeTab === 'unions'
+                  ? `${item.score?.toLocaleString() || 0} 💰`
+                  : `${item.total_earned?.toLocaleString() || 0} 💰`}
               </div>
             </div>
           ))}

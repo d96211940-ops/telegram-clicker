@@ -2,7 +2,15 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
 import './Cards.css';
 
-const Cards = ({ score, onScoreUpdate, telegramUser }) => {
+const Cards = ({ totalEarned, onScoreUpdate, telegramUser, level }) => {
+  const [allCards, setAllCards] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState('all');
+  const [showGiftAnimation, setShowGiftAnimation] = useState(false);
+  const [giftCard, setGiftCard] = useState(null);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [selectedCard, setSelectedCard] = useState(null);
+  
   const [ownedCards, setOwnedCards] = useState(() => {
     const saved = localStorage.getItem('clicker_owned_cards');
     return saved ? JSON.parse(saved) : [];
@@ -20,87 +28,44 @@ const Cards = ({ score, onScoreUpdate, telegramUser }) => {
     scoreMultiplier: 1,
   });
 
-  const cards = [
-    { 
-      id: 1, 
-      name: '💪 Бустер Силы', 
-      description: '+1 к силе клика',
-      price: 500, 
-      type: 'clickPower',
-      value: 1,
-      icon: '💪',
-      rarity: 'common'
-    },
-    { 
-      id: 2, 
-      name: '⚡ Энерджайзер', 
-      description: '+2 к регенерации энергии',
-      price: 800, 
-      type: 'energyRegen',
-      value: 2,
-      icon: '⚡',
-      rarity: 'common'
-    },
-    { 
-      id: 3, 
-      name: '🔋 Мощный Аккумулятор', 
-      description: '+500 к макс. энергии',
-      price: 1000, 
-      type: 'maxEnergy',
-      value: 500,
-      icon: '🔋',
-      rarity: 'rare'
-    },
-    { 
-      id: 4, 
-      name: '💎 Кристалл Удачи', 
-      description: '+10% к заработку',
-      price: 2500, 
-      type: 'scoreMultiplier',
-      value: 0.1,
-      icon: '💎',
-      rarity: 'epic'
-    },
-    { 
-      id: 5, 
-      name: '🚀 Ракетный Ускоритель', 
-      description: '+5 к силе клика',
-      price: 5000, 
-      type: 'clickPower',
-      value: 5,
-      icon: '🚀',
-      rarity: 'epic'
-    },
-    { 
-      id: 6, 
-      name: '👑 Корона Чемпиона', 
-      description: '+25% к заработку',
-      price: 15000, 
-      type: 'scoreMultiplier',
-      value: 0.25,
-      icon: '👑',
-      rarity: 'legendary'
-    },
-    { 
-      id: 7, 
-      name: '🌟 Звёздная Пыль', 
-      description: '+10 к регенерации',
-      price: 8000, 
-      type: 'energyRegen',
-      value: 10,
-      icon: '🌟',
-      rarity: 'legendary'
-    },
-    { 
-      id: 8, 
-      name: '🔮 Магическая Сфера', 
-      description: '+2000 к макс. энергии',
-      price: 12000, 
-      type: 'maxEnergy',
-      value: 2000,
-      icon: '🔮',
-      rarity: 'epic'
-    },
+  // Загрузка карт из Supabase
+  useEffect(() => {
+    loadCards();
+  }, []);
+
+  const loadCards = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('cards')
+        .select('*')
+        .order('price', { ascending: true });
+
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        setAllCards(data);
+      } else {
+        // Fallback - используем встроенный массив если БД пустая
+        setAllCards(getFallbackCards());
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки карт:', error);
+      setAllCards(getFallbackCards());
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fallback карты (если БД недоступна)
+  const getFallbackCards = () => [
+    { id: 1, name: '💪 Маленькая Сила', description: '+1 к силе клика', price: 300, rarity: 'common', type: 'clickPower', value: 1, icon: '💪' },
+    { id: 2, name: '⚡ Малая Энергия', description: '+1 к регенерации', price: 350, rarity: 'common', type: 'energyRegen', value: 1, icon: '⚡' },
+    { id: 3, name: '🔋 Батарейка', description: '+100 к макс. энергии', price: 400, rarity: 'common', type: 'maxEnergy', value: 100, icon: '🔋' },
+    { id: 4, name: '💪 Средняя Сила', description: '+8 к силе клика', price: 2000, rarity: 'rare', type: 'clickPower', value: 8, icon: '💪' },
+    { id: 5, name: '⚡ Заряд', description: '+6 к регенерации', price: 2200, rarity: 'rare', type: 'energyRegen', value: 6, icon: '⚡' },
+    { id: 6, name: '🚀 Ракетный Двигатель', description: '+20 к силе клика', price: 8000, rarity: 'epic', type: 'clickPower', value: 20, icon: '🚀' },
+    { id: 7, name: '👑 Корона Императора', description: '+50 к силе клика', price: 30000, rarity: 'legendary', type: 'clickPower', value: 50, icon: '👑' },
   ];
 
   useEffect(() => {
@@ -118,7 +83,7 @@ const Cards = ({ score, onScoreUpdate, telegramUser }) => {
     };
 
     activeCards.forEach(cardId => {
-      const card = cards.find(c => c.id === cardId);
+      const card = allCards.find(c => c.id === cardId);
       if (card) {
         newBoosts[card.type] += card.value;
       }
@@ -128,10 +93,16 @@ const Cards = ({ score, onScoreUpdate, telegramUser }) => {
     
     // Сохраняем бусты для использования в кликере
     localStorage.setItem('clicker_boosts', JSON.stringify(newBoosts));
-  }, [activeCards]);
+  }, [activeCards, allCards]);
 
-  const buyCard = async (card) => {
-    if (score < card.price) {
+  const handleBuyClick = (card) => {
+    setSelectedCard(card);
+    setShowPurchaseModal(true);
+  };
+
+  const buyCard = async () => {
+    const card = selectedCard;
+    if (totalEarned < card.price) {
       alert('❌ Недостаточно монет!');
       return;
     }
@@ -140,27 +111,51 @@ const Cards = ({ score, onScoreUpdate, telegramUser }) => {
       return;
     }
 
+    // Проверка условия покупки (требуемая карта)
+    if (card.requires_card_id && !ownedCards.includes(card.requires_card_id)) {
+      const requiredCard = allCards.find(c => c.id === card.requires_card_id);
+      if (requiredCard) {
+        alert(`❌ Сначала купите карту "${requiredCard.name}"!`);
+        return;
+      }
+    }
+
+    // Проверка минимального уровня
+    if (card.min_level && level < card.min_level) {
+      alert(`❌ Нужен ${card.min_level} уровень для покупки!`);
+      return;
+    }
+
     try {
       // Списываем монеты
-      const newScore = score - card.price;
-      localStorage.setItem('clicker_score', newScore.toString());
-      
+      const newTotalEarned = totalEarned - card.price;
+      localStorage.setItem('clicker_total_earned', newTotalEarned.toString());
+
       // Обновляем в Supabase
       if (telegramUser?.id) {
         await supabase
           .from('players')
-          .update({ 
-            score: newScore,
+          .update({
+            total_earned: newTotalEarned,
             updated_at: new Date().toISOString()
           })
           .eq('id', telegramUser.id.toString());
       }
-      
+
       // Покупаем карту
-      onScoreUpdate(newScore);
+      onScoreUpdate(newTotalEarned);
       setOwnedCards([...ownedCards, card.id]);
       
-      alert(`✅ Карта "${card.name}" куплена!`);
+      // Показываем анимацию подарка
+      setGiftCard(card);
+      setShowGiftAnimation(true);
+      setTimeout(() => {
+        setShowGiftAnimation(false);
+        setGiftCard(null);
+      }, 2500);
+      
+      setShowPurchaseModal(false);
+      setSelectedCard(null);
     } catch (error) {
       console.error('Ошибка покупки карты:', error);
       alert('❌ Ошибка при покупке карты: ' + error.message);
@@ -174,8 +169,14 @@ const Cards = ({ score, onScoreUpdate, telegramUser }) => {
     }
     
     if (activeCards.includes(cardId)) {
+      // Деактивируем
       setActiveCards(activeCards.filter(id => id !== cardId));
     } else {
+      // Проверяем лимит
+      if (activeCards.length >= 4) {
+        alert('❌ Максимум 4 активные карты! Деактивируйте одну из них.');
+        return;
+      }
       setActiveCards([...activeCards, cardId]);
     }
   };
@@ -200,6 +201,16 @@ const Cards = ({ score, onScoreUpdate, telegramUser }) => {
     }
   };
 
+  const getRarityName = (rarity) => {
+    switch (rarity) {
+      case 'common': return 'Обычная';
+      case 'rare': return 'Редкая';
+      case 'epic': return 'Эпическая';
+      case 'legendary': return 'Легендарная';
+      default: return rarity;
+    }
+  };
+
   const totalBoosts = {
     clickPower: boosts.clickPower,
     energyRegen: boosts.energyRegen,
@@ -207,15 +218,78 @@ const Cards = ({ score, onScoreUpdate, telegramUser }) => {
     scoreMultiplier: ((boosts.scoreMultiplier - 1) * 100).toFixed(0),
   };
 
+  // Фильтрация карт
+  const filteredCards = activeFilter === 'all' 
+    ? allCards 
+    : allCards.filter(card => card.rarity === activeFilter);
+
+  const ownedFilteredCards = filteredCards.filter(card => ownedCards.includes(card.id));
+  const shopFilteredCards = filteredCards.filter(card => !ownedCards.includes(card.id));
+
   return (
     <div className="cards">
+      {/* Анимация подарка */}
+      {showGiftAnimation && giftCard && (
+        <div className="gift-animation">
+          <div className="gift-container">
+            <div className="gift-box">
+              <div className="gift-lid"></div>
+              <div className="gift-body">
+                <span className="gift-icon">{giftCard.icon}</span>
+              </div>
+            </div>
+            <div className="gift-sparkles">
+              <span>✨</span><span>⭐</span><span>💫</span><span>🌟</span><span>✨</span>
+            </div>
+            <div className="gift-text">
+              <div className="gift-title">Получено!</div>
+              <div className="gift-name">{giftCard.name}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="cards-header">
         <h2>🃏 Магазин Карточек</h2>
         <p className="cards-subtitle">Улучшай свои возможности!</p>
       </div>
 
+      {/* Фильтры */}
+      <div className="cards-filters">
+        <button 
+          className={`filter-btn ${activeFilter === 'all' ? 'active' : ''}`}
+          onClick={() => setActiveFilter('all')}
+        >
+          Все
+        </button>
+        <button 
+          className={`filter-btn common ${activeFilter === 'common' ? 'active' : ''}`}
+          onClick={() => setActiveFilter('common')}
+        >
+          🟤 Обычные
+        </button>
+        <button 
+          className={`filter-btn rare ${activeFilter === 'rare' ? 'active' : ''}`}
+          onClick={() => setActiveFilter('rare')}
+        >
+          🔵 Редкие
+        </button>
+        <button 
+          className={`filter-btn epic ${activeFilter === 'epic' ? 'active' : ''}`}
+          onClick={() => setActiveFilter('epic')}
+        >
+          🟣 Эпические
+        </button>
+        <button 
+          className={`filter-btn legendary ${activeFilter === 'legendary' ? 'active' : ''}`}
+          onClick={() => setActiveFilter('legendary')}
+        >
+          🟡 Легендарные
+        </button>
+      </div>
+
       <div className="active-boosts">
-        <h3>🔥 Активные бусты</h3>
+        <h3>🔥 Активные бусты ({activeCards.length}/4)</h3>
         <div className="boosts-grid">
           <div className="boost-item">
             <span className="boost-icon">💪</span>
@@ -249,68 +323,139 @@ const Cards = ({ score, onScoreUpdate, telegramUser }) => {
       </div>
 
       <div className="my-cards">
-        <h3>📚 Мои карты ({ownedCards.length}/{cards.length})</h3>
-        <div className="cards-grid">
-          {cards.filter(card => ownedCards.includes(card.id)).map(card => (
-            <div 
-              key={card.id} 
-              className={`card owned ${activeCards.includes(card.id) ? 'active' : ''}`}
-              style={{ 
-                borderColor: getRarityBorder(card.rarity),
-                background: `linear-gradient(135deg, ${getRarityColor(card.rarity)}15 0%, transparent 100%)`
-              }}
-              onClick={() => toggleCard(card.id)}
-            >
-              <div className="card-icon">{card.icon}</div>
-              <div className="card-name">{card.name}</div>
-              <div className="card-description">{card.description}</div>
-              <div className="card-status">
-                {activeCards.includes(card.id) ? '✅ Активно' : '⏸️ Не активно'}
+        <h3>📚 Мои карты ({ownedCards.length}/{allCards.length})</h3>
+        {loading ? (
+          <div className="cards-loading">🔄 Загрузка карт...</div>
+        ) : ownedFilteredCards.length > 0 ? (
+          <div className="cards-grid">
+            {ownedFilteredCards.map(card => (
+              <div
+                key={card.id}
+                className={`card owned ${activeCards.includes(card.id) ? 'active' : ''}`}
+                data-rarity={card.rarity}
+                style={{
+                  borderColor: getRarityBorder(card.rarity),
+                  background: `linear-gradient(135deg, ${getRarityColor(card.rarity)}15 0%, transparent 100%)`
+                }}
+                onClick={() => toggleCard(card.id)}
+              >
+                <div className="card-icon">{card.icon}</div>
+                <div className="card-name">{card.name}</div>
+                <div className="card-description">{card.description}</div>
+                <div 
+                  className="card-rarity-badge"
+                  style={{ background: getRarityColor(card.rarity) }}
+                >
+                  {getRarityName(card.rarity)}
+                </div>
+                <div className="card-status">
+                  {activeCards.includes(card.id) ? '✅ Активно' : '⏸️ Не активно'}
+                </div>
               </div>
-            </div>
-          ))}
-          {ownedCards.length === 0 && (
-            <div className="no-cards">У вас пока нет карт. Купите первую!</div>
-          )}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="no-cards">У вас пока нет карт этой редкости. Купите первую!</div>
+        )}
       </div>
 
       <div className="shop">
         <h3>🏪 Магазин</h3>
-        <div className="cards-grid">
-          {cards.filter(card => !ownedCards.includes(card.id)).map(card => (
-            <div 
-              key={card.id} 
-              className="card shop-card"
-              style={{ 
-                borderColor: getRarityBorder(card.rarity),
-                background: `linear-gradient(135deg, ${getRarityColor(card.rarity)}15 0%, transparent 100%)`
-              }}
-            >
-              <div className="card-header">
-                <div className="card-icon">{card.icon}</div>
-                <div 
-                  className="card-rarity"
-                  style={{ color: getRarityColor(card.rarity) }}
+        {shopFilteredCards.length > 0 ? (
+          <div className="cards-grid">
+            {shopFilteredCards.map(card => {
+              const hasRequiredCard = !card.requires_card_id || ownedCards.includes(card.requires_card_id);
+              const hasMinLevel = !card.min_level || level >= card.min_level;
+              const canBuy = hasRequiredCard && hasMinLevel;
+              const requiredCard = card.requires_card_id ? allCards.find(c => c.id === card.requires_card_id) : null;
+
+              return (
+                <div
+                  key={card.id}
+                  className="card shop-card"
+                  data-rarity={card.rarity}
+                  style={{
+                    borderColor: getRarityBorder(card.rarity),
+                    background: `linear-gradient(135deg, ${getRarityColor(card.rarity)}15 0%, transparent 100%)`,
+                    opacity: canBuy ? 1 : 0.6
+                  }}
                 >
-                  {card.rarity === 'common' ? 'Обычная' : 
-                   card.rarity === 'rare' ? 'Редкая' :
-                   card.rarity === 'epic' ? 'Эпическая' : 'Легендарная'}
+                  <div className="card-header">
+                    <div className="card-icon">{card.icon}</div>
+                    <div
+                      className="card-rarity-badge"
+                      style={{ background: getRarityColor(card.rarity) }}
+                    >
+                      {getRarityName(card.rarity)}
+                    </div>
+                  </div>
+                  <div className="card-name">{card.name}</div>
+                  <div className="card-description">{card.description}</div>
+                  
+                  {!canBuy && (
+                    <div className="card-requirements">
+                      {requiredCard && !hasRequiredCard && (
+                        <div className="requirement-item">
+                          <span>🔒 Требуется: {requiredCard.name}</span>
+                        </div>
+                      )}
+                      {card.min_level && !hasMinLevel && (
+                        <div className="requirement-item">
+                          <span>🔒 Нужен {card.min_level} ур.</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  <button
+                    className="buy-btn"
+                    onClick={() => handleBuyClick(card)}
+                    disabled={totalEarned < card.price || !canBuy}
+                  >
+                    {canBuy ? `Купить за ${card.price.toLocaleString()} 💰` : '🔒 Заблокировано'}
+                  </button>
                 </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="no-cards">В этой категории все карты куплены!</div>
+        )}
+      </div>
+
+      {/* Модальное окно покупки */}
+      {showPurchaseModal && selectedCard && (
+        <div className="modal-overlay" onClick={() => setShowPurchaseModal(false)}>
+          <div className="modal purchase-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-gift-icon">{selectedCard.icon}</div>
+            <h3>Получить карту?</h3>
+            <div 
+              className="modal-card-preview"
+              style={{ borderColor: getRarityBorder(selectedCard.rarity) }}
+            >
+              <div className="modal-card-name" style={{ color: getRarityColor(selectedCard.rarity) }}>
+                {selectedCard.name}
               </div>
-              <div className="card-name">{card.name}</div>
-              <div className="card-description">{card.description}</div>
-              <button 
-                className="buy-btn"
-                onClick={() => buyCard(card)}
-                disabled={score < card.price}
+              <div className="modal-card-desc">{selectedCard.description}</div>
+              <div 
+                className="modal-card-rarity"
+                style={{ background: getRarityColor(selectedCard.rarity) }}
               >
-                Купить за {card.price} 💰
+                {getRarityName(selectedCard.rarity)}
+              </div>
+            </div>
+            <div className="modal-cost">💰 {selectedCard.price.toLocaleString()} монет</div>
+            <div className="modal-actions">
+              <button className="modal-cancel" onClick={() => setShowPurchaseModal(false)}>
+                Отмена
+              </button>
+              <button className="modal-confirm buy" onClick={buyCard} disabled={totalEarned < selectedCard.price}>
+                Купить
               </button>
             </div>
-          ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

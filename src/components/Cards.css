@@ -105,9 +105,67 @@
   }
 }
 
+/* Анимация для эпических карт */
+.card.owned[data-rarity="epic"] {
+  animation: epicPulse 3s ease infinite;
+}
+
+@keyframes epicPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(155, 89, 182, 0.4), inset 0 0 10px rgba(155, 89, 182, 0.1);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(155, 89, 182, 0.7), inset 0 0 20px rgba(155, 89, 182, 0.2);
+    transform: scale(1.02);
+  }
+}
+
+/* Анимация для легендарных карт */
+.card.owned[data-rarity="legendary"] {
+  animation: legendaryGlow 2.5s ease infinite;
+}
+
+@keyframes legendaryGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(241, 196, 15, 0.5), inset 0 0 15px rgba(241, 196, 15, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(241, 196, 15, 0.9), inset 0 0 25px rgba(241, 196, 15, 0.3);
+    transform: scale(1.03);
+  }
+}
+
 .shop-card {
   border: 1px solid;
   cursor: default;
+}
+
+.shop-card[data-rarity="epic"] {
+  animation: epicShopPulse 4s ease infinite;
+}
+
+@keyframes epicShopPulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(155, 89, 182, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(155, 89, 182, 0.5);
+  }
+}
+
+.shop-card[data-rarity="legendary"] {
+  animation: legendaryShopGlow 3s ease infinite;
+}
+
+@keyframes legendaryShopGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(241, 196, 15, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(241, 196, 15, 0.7);
+  }
 }
 
 .card:hover {
@@ -145,6 +203,26 @@
   font-size: 11px;
   color: #6b7280;
   margin-bottom: 12px;
+}
+
+.card-requirements {
+  background: rgba(231, 76, 60, 0.1);
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  border-radius: 8px;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
+.requirement-item {
+  font-size: 10px;
+  color: #e74c3c;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.requirement-item:first-child {
+  margin-bottom: 4px;
 }
 
 .card-status {
@@ -190,3 +268,275 @@
   border-radius: 12px;
   border: 1px dashed rgba(255, 255, 255, 0.1);
 }
+
+/* Фильтры */
+.cards-filters {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+  scrollbar-width: none;
+}
+
+.cards-filters::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-btn {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #a0a0a0;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.filter-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.filter-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: transparent;
+}
+
+.filter-btn.common.active {
+  background: linear-gradient(135deg, #8B7355 0%, #6B5344 100%);
+}
+
+.filter-btn.rare.active {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+}
+
+.filter-btn.epic.active {
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+}
+
+.filter-btn.legendary.active {
+  background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+  color: #1a1a2e;
+}
+
+/* Бейдж редкости */
+.card-rarity-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: bold;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 6px;
+  color: #1a1a2e;
+  margin-bottom: 8px;
+}
+
+/* Анимация подарка */
+.gift-animation {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: giftFadeIn 0.3s ease;
+}
+
+@keyframes giftFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.gift-container {
+  text-align: center;
+  animation: giftBounce 0.6s ease infinite;
+}
+
+@keyframes giftBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+.gift-box {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 20px;
+}
+
+.gift-lid {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 25px;
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  border-radius: 5px 5px 0 0;
+  animation: lidShake 0.5s ease infinite;
+}
+
+@keyframes lidShake {
+  0%, 100% { transform: translateX(-50%) rotate(0deg); }
+  25% { transform: translateX(-50%) rotate(-5deg); }
+  75% { transform: translateX(-50%) rotate(5deg); }
+}
+
+.gift-body {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 90px;
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  border-radius: 0 0 10px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gift-icon {
+  font-size: 48px;
+  animation: iconPop 0.5s ease;
+}
+
+@keyframes iconPop {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+.gift-sparkles {
+  position: absolute;
+  width: 200px;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 50%;
+  display: flex;
+  justify-content: space-between;
+}
+
+.gift-sparkles span {
+  font-size: 24px;
+  animation: sparkle 1s ease infinite;
+}
+
+.gift-sparkles span:nth-child(1) { animation-delay: 0s; }
+.gift-sparkles span:nth-child(2) { animation-delay: 0.2s; }
+.gift-sparkles span:nth-child(3) { animation-delay: 0.4s; }
+.gift-sparkles span:nth-child(4) { animation-delay: 0.6s; }
+.gift-sparkles span:nth-child(5) { animation-delay: 0.8s; }
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.gift-text {
+  margin-top: 30px;
+}
+
+.gift-title {
+  font-size: 28px;
+  font-weight: bold;
+  color: #f1c40f;
+  margin-bottom: 10px;
+  animation: textGlow 1s ease infinite;
+}
+
+@keyframes textGlow {
+  0%, 100% { text-shadow: 0 0 10px rgba(241, 196, 15, 0.5); }
+  50% { text-shadow: 0 0 25px rgba(241, 196, 15, 0.8); }
+}
+
+.gift-name {
+  font-size: 18px;
+  color: #ffffff;
+}
+
+/* Модальное окно покупки */
+.purchase-modal {
+  text-align: center;
+}
+
+.modal-gift-icon {
+  font-size: 64px;
+  margin-bottom: 15px;
+  animation: iconPop 0.5s ease;
+}
+
+.modal-card-preview {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid;
+  border-radius: 15px;
+  padding: 20px;
+  margin: 15px 0;
+}
+
+.modal-card-name {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.modal-card-desc {
+  color: #a0a0a0;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.modal-card-rarity {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 8px;
+  color: #1a1a2e;
+}
+
+.purchase-modal .modal-cost {
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+.modal-confirm.buy {
+  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+}
+
+.modal-confirm.buy:hover:not(:disabled) {
+  box-shadow: 0 5px 20px rgba(46, 204, 113, 0.4);
+}
+
+/* Загрузка */
+.cards-loading {
+  text-align: center;
+  color: #6b7280;
+  padding: 40px;
+  font-size: 16px;
+}
+
+/* Лимит активных карт */
+.active-boosts h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.active-boosts h3::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(241, 196, 15, 0.3);
+}
+

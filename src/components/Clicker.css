@@ -48,17 +48,61 @@
   font-size: 20px;
 }
 
-.combo-display {
-  text-align: center;
-  font-size: 20px;
-  font-weight: bold;
+/* Прогресс уровня */
+.level-progress-section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px 15px;
   margin-bottom: 15px;
-  animation: comboPulse 0.5s ease infinite;
 }
 
-@keyframes comboPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+.level-progress-text {
+  font-size: 13px;
+  color: #a0a0a0;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.level-progress-text strong {
+  color: #f1c40f;
+}
+
+.level-progress-bar {
+  height: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  overflow: hidden;
+  position: relative;
+}
+
+.level-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  transition: width 0.5s ease;
+  border-radius: 5px;
+  position: relative;
+}
+
+.level-progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  animation: levelShine 2s linear infinite;
+}
+
+@keyframes levelShine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 .energy-section {

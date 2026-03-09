@@ -8,6 +8,33 @@
   min-height: 100vh;
 }
 
+/* Контейнер для уведомлений */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 400px;
+  pointer-events: none;
+}
+
+.toast-container > * {
+  pointer-events: auto;
+}
+
+/* Адаптив для мобильных */
+@media (max-width: 480px) {
+  .toast-container {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+}
+
 /* Скроллбар */
 ::-webkit-scrollbar {
   width: 6px;
